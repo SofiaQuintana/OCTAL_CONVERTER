@@ -1,0 +1,58 @@
+package parser;
+import java_cup.runtime.Symbol;
+import lexer.OctalLexer;
+
+parser code {:
+    private int index;
+
+    public OctalParser(OctalLexer lexer) {
+        super(lexer);
+        index = 0;
+    }
+
+    public void syntax_error(Symbol s) {
+        System.err.println("Error sintactico en la Linea " + (s.left)+ " Columna "+s.right+". Componente " + s.value + " no reconocido."); 
+    }
+
+    public void unrecovered_syntax_error(Symbol s) throws java.lang.Exception{ 
+        System.err.println("Error sintactico irrecuperable en la Linea " + (s.left)+ " Columna "+s.right+". Componente " + s.value + " no reconocido."); 
+    }  
+
+:}
+
+/* Terminales... (tokens RESULT by the scanner) */
+terminal String     PLUS, MINUS;
+terminal Integer   DIGIT;
+
+/* No Terminales... */
+non terminal                octal;
+non terminal Integer   digits, digit;
+
+/* Grammar */
+start with octal;
+
+octal ::= PLUS digits:dec 
+               {: System.out.println(index+2 + "). El AST ha sido sintetizado en su totalidad. El producto final sintetizado resultante: " +  dec); 
+                   System.out.println("\n###### El resultado decimal es: " + dec + " ######");  :}
+               | MINUS digits:dec
+               {: System.out.println(index+2 + "). El AST ha sido sintetizado en su totalidad. El producto final sintetizado resultante: " +  (dec*-1)); 
+                   System.out.println("\n###### El resultado decimal es: " + (dec*-1) + " ######"); :}
+               | digits:dec
+               {: System.out.println(index+2 + "). El AST ha sido sintetizado en su totalidad. El valor resultante es: " +  dec);
+                   System.out.println("\n###### El resultado decimal es: " + dec + " ######");  :}
+               ;
+
+digits ::=  digit:val digits:dec
+                 {: index++;
+                    RESULT = dec + (val * (int)Math.pow(8,index)); 
+                    System.out.println(index+1 + "). Se realiza la multiplicacion del valor " + val + " por 8^" + index + " y se suma " +
+                        "el resultante anterior " + dec + ". El producto sintetizado actual es: " +  RESULT);
+                 :}
+                 | digit:val
+                 {: index = 0;
+                    RESULT = val * (int)Math.pow(8,index); 
+                    System.out.println(index+1 + "). Se realiza la multiplicacion del valor " + val + " por 8^" + index + ". El producto sintetizado actual es: " +  RESULT);
+                  :}
+                 ;  
+
+digit ::= DIGIT:val {: RESULT = val; :}  ;
